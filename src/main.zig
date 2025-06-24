@@ -1,24 +1,32 @@
 const std = @import("std");
 const nova = @import("nova");
 
-const Lexer = @import("lexer.zig").Lexer;
-const LexerError = @import("lexer.zig").LexerError;
-const Token = @import("lexer/token.zig").Token;
+const lexer = @import("lexer/lexer.zig");
+const Lexer = lexer.Lexer;
+const LexerError = lexer.LexerError;
+const Token = lexer.Token;
 
 pub fn main() !void {
-    var lexer = Lexer.new(
-        \\con foo |: 5
-        \\val bar | i8 : -5
-        \\con BAZ | string : "I am a string!"
+    var gpa = std.heap.DebugAllocator(.{}){};
+    const allocator = gpa.allocator();
+
+    var l = Lexer.new(
+        // This compiles
+        // \\con foo |: 5
+        // \\val bar | i8 : -5
+        // \\con BAZ | string : "I am a string!"
+        // // // // // //
+        \\con add | func(a: i8, b: i8) -> i8 :   a + b
+        \\con sub | func(a: i8, b: i8) -> i8 : { a + b }
     );
     while (true) {
-        const t = lexer.next() catch |e| {
+        const t = l.next() catch |e| {
             switch (e) {
                 LexerError.UnknownChar => {
                     // TODO: Add better eof check
-                    if (lexer.cur >= lexer.source.len) return;
-                    const unknown = lexer.source[lexer.cur];
-                    nova.err("Unknown character `{c}`", .{unknown});
+                    if (l.cur >= l.source.len) return;
+                    const unknown = l.source[l.cur];
+                    nova.err("Unknown character `{c}`\n", .{unknown});
                     return;
                 },
                 else => unreachable,
@@ -27,6 +35,6 @@ pub fn main() !void {
 
         if (t.kind == Token.EOF.kind) return;
 
-        nova.info("Found {} (`{s}`)\n", .{ t.kind, t.word });
+        nova.info("Found {s}\n", .{try t.fmt(allocator)});
     }
 }
