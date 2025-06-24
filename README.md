@@ -5,6 +5,24 @@ smart & simple as all langauges should be
 
 ## Goals (hopes & dreams)
 
+### Milestones
+
+- [ ] Lexing
+- [ ] Parsing
+- [ ] Code generation
+  - [ ] [QBE](https://c9x.me/compile/)
+  - [ ] [LLVM](https://llvm.org/docs/GettingStarted.html)
+  - [ ] Our own backend? Mayhaps!
+    - x86_64-Linux   (fasm)
+    - x86_64-Windows (fasm)
+    - aarch64-Linux  (gas)
+- [ ] **&#x2605;&#x2605; Self-hosting &#x2605;&#x2605;**
+
+### Design
+
+- [ ] C interop
+- [ ] Full control over memory
+
 ## Syntax and Semantics
 
 ### Variables
