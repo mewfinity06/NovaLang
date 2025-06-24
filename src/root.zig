@@ -1,19 +1,22 @@
 const std = @import("std");
+const print = std.debug.print;
 
-pub fn bufferedPrint() !void {
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
-
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
-
-    try bw.flush(); // Don't forget to flush!
+pub fn info(comptime fmt: []const u8, args: anytype) void {
+    print("INFO: ", .{});
+    print(fmt, args);
 }
 
-pub fn add(a: i32, b: i32) i32 {
-    return a + b;
+pub fn warn(comptime fmt: []const u8, args: anytype) void {
+    print("WARNING: ", .{});
+    print(fmt, args);
 }
 
-test "basic add functionality" {
-    try std.testing.expect(add(3, 7) == 10);
+pub fn err(comptime fmt: []const u8, args: anytype) void {
+    print("ERROR: ", .{});
+    print(fmt, args);
+}
+
+pub fn unimplemented(place: []const u8) noreturn {
+    err("unimplemented `{s}`\n", .{place});
+    unreachable;
 }
