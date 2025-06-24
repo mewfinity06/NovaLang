@@ -5,6 +5,8 @@ smart & simple as all langauges should be
 
 ## Goals (hopes & dreams)
 
+written in Zig version 0.15.0-dev.870+710632b45
+
 ### Milestones
 
 - [ ] Lexing
