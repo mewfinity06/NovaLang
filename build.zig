@@ -4,6 +4,8 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    // Dependancies
+    const clap = b.dependency("clap", .{});
     const mod = b.addModule("nova", .{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
@@ -20,6 +22,9 @@ pub fn build(b: *std.Build) void {
             },
         }),
     });
+
+    // Install dependencies
+    exe.root_module.addImport("clap", clap.module("clap"));
 
     b.installArtifact(exe);
 
