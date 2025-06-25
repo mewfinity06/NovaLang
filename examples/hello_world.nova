@@ -1,0 +1,5 @@
+con print = std.io.print;
+
+con main | func() -> void : {
+	print("Hello world!")
+}
