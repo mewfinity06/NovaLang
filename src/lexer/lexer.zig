@@ -3,7 +3,7 @@ const nova = @import("nova");
 pub const Token = @import("token.zig").Token;
 pub const Kind = @import("token.zig").Kind;
 
-pub const LexerError = error{UnknownChar};
+pub const LexerError = error{ UnknownChar, UnexpectedChar, OutOfBounds };
 
 pub const Lexer = struct {
     source: []const u8,
@@ -44,14 +44,24 @@ pub const Lexer = struct {
                 const string = try self.readString();
                 return .{ .word = string, .kind = .StringLit };
             },
+            '/' => switch (try self.peekC()) {
+                '/' => {
+                    const comment = try self.readComment();
+                    return .{ .word = comment, .kind = .Comment };
+                },
+                else => return LexerError.UnexpectedChar,
+            },
             '\'' => {
                 const char = try self.readChar();
                 return .{ .word = char, .kind = .CharLit };
             },
-            '-' => switch (try self.peekC()) {
+            '-' => switch (try self.nextC()) {
                 '>' => return self.makeToken(.RArrow, 2),
                 else => return self.makeToken(.Sub, 1),
             },
+            ';' => return self.makeToken(.SemiColon, 1),
+            '.' => return self.makeToken(.Dot, 1),
+            '=' => return self.makeToken(.Equal, 1),
             '{' => return self.makeToken(.OBrace, 1),
             '}' => return self.makeToken(.CBrace, 1),
             '[' => return self.makeToken(.OBrack, 1),
@@ -63,10 +73,20 @@ pub const Lexer = struct {
             '*' => return self.makeToken(.Mul, 1),
             '\\' => return self.makeToken(.Div, 1),
             ',' => return self.makeToken(.Comma, 1),
+            '?' => return self.makeToken(.Question, 1),
             else => return LexerError.UnknownChar,
         }
 
         return Token.EOF;
+    }
+
+    fn advance(self: *Lexer) LexerError!void {
+        self.cur += 1;
+        self.c = self.source[self.cur];
+    }
+
+    fn updateC(self: *Lexer) void {
+        self.c = self.source[self.cur];
     }
 
     fn makeToken(self: *Lexer, kind: Kind, len: usize) Token {
@@ -75,15 +95,25 @@ pub const Lexer = struct {
         return Token{ .word = self.source[self.cur..end], .kind = kind };
     }
 
-    fn readIdent(self: *Lexer) LexerError![]const u8 {
+    fn readComment(self: *Lexer) LexerError![]const u8 {
+        self.cur += 3;
         const start = self.cur;
         var end = self.cur;
-        while (std.ascii.isAlphanumeric(self.c)) : (end += 1) {
+        while (self.c != '\n') : (end += 1) {
             defer self.cur += 1;
-            self.c = self.source[self.cur];
+            self.updateC();
         }
         self.cur -= 1;
         return self.source[start .. end - 1];
+    }
+
+    fn readIdent(self: *Lexer) LexerError![]const u8 {
+        const start = self.cur;
+        try self.advance();
+        while (self.cur < self.source.len and (std.ascii.isAlphanumeric(self.c) or self.c == '_')) {
+            try self.advance();
+        }
+        return self.source[start..self.cur];
     }
 
     fn readNumeric(self: *Lexer) LexerError![]const u8 {
@@ -91,7 +121,7 @@ pub const Lexer = struct {
         var end = self.cur;
         while (std.ascii.isDigit(self.c)) : (end += 1) {
             defer self.cur += 1;
-            self.c = self.source[self.cur];
+            self.updateC();
         }
         self.cur -= 1;
         return self.source[start .. end - 1];
@@ -100,13 +130,12 @@ pub const Lexer = struct {
     // TODO: read escape characters
     fn readString(self: *Lexer) LexerError![]const u8 {
         defer self.cur += 1;
-        self.cur += 1;
-        self.c = self.source[self.cur];
+        try self.advance();
         const start = self.cur;
         var end = self.cur;
         while (self.c != '"') : (end += 1) {
             defer self.cur += 1;
-            self.c = self.source[self.cur];
+            self.updateC();
         }
         self.cur -= 1;
         return self.source[start .. end - 1];
@@ -114,7 +143,7 @@ pub const Lexer = struct {
 
     fn readChar(self: Lexer) LexerError![]const u8 {
         _ = self;
-        nova.unimplemented("readChar");
+        nova.unimplemented("Lexer.readChar");
     }
 
     fn skipWhitespace(self: *Lexer) void {
@@ -122,17 +151,20 @@ pub const Lexer = struct {
             self.cur += 1;
         }
         if (self.cur < self.source.len) {
-            self.c = self.source[self.cur];
+            self.updateC();
         } else {
             self.c = 0;
         }
     }
+
     fn peekC(self: *Lexer) LexerError!u8 {
-        return self.source[self.cur + 1];
+        if (self.cur >= self.source.len) return LexerError.OutOfBounds;
+        return self.c;
     }
 
     fn nextC(self: *Lexer) LexerError!u8 {
         defer self.cur += 1;
-        return self.source[self.cur];
+        if (self.cur >= self.source.len) return LexerError.OutOfBounds;
+        return self.c;
     }
 };

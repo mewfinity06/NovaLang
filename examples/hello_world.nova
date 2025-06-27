@@ -1,5 +1,5 @@
-con print = std.io.print;
+con print = std.io.printf;
 
 con main | func() -> void : {
-	print("Hello world!")
+	printf("Hello world!\n")
 }

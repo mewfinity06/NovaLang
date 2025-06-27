@@ -49,8 +49,17 @@ pub fn main() !void {
                     LexerError.UnknownChar => {
                         // TODO: Add better eof check
                         if (l.cur >= l.source.len) return;
-                        const unknown = l.source[l.cur];
-                        nova.err("Unknown character `{c}`\n", .{unknown});
+                        const c = l.source[l.cur];
+                        nova.err("Unknown character `{c}`\n", .{c});
+                        return;
+                    },
+                    LexerError.UnexpectedChar => {
+                        const c = l.source[l.cur];
+                        nova.err("Unexpected character `{c}`\n", .{c});
+                        return;
+                    },
+                    LexerError.OutOfBounds => {
+                        nova.err("Out of Bounds. Got {}, expected {}\n", .{ l.cur, l.source.len });
                         return;
                     },
                 }

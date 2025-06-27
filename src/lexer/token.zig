@@ -15,7 +15,7 @@ pub const Token = struct {
         const allocPrint = std.fmt.allocPrint;
         return switch (self.kind) {
             .Identifier => try allocPrint(allocator, "Identifier -> `{s}`", .{self.word}),
-            .StringLit, .NumberLit, .CharLit => try allocPrint(allocator, "{s} -> `{s}`", .{ self.kind.fmt(), self.word }),
+            .StringLit, .NumberLit, .CharLit, .Comment => try allocPrint(allocator, "{s} -> `{s}`", .{ self.kind.fmt(), self.word }),
             else => try allocPrint(allocator, "{s}", .{self.kind.fmt()}),
         };
     }
@@ -29,28 +29,36 @@ pub const Kind = enum {
 
     Func,
     Struct,
+    Enum,
 
     // Tokens //
-    Pipe, // `|`
-    Assign, // `|:`
-    RArrow, // `->`
-    Colon, // `:`
-    Sub, // `-`
-    Add, // `+`
-    Mul, // `*`
-    Div, // `/`
-    Comma, // `,`
-    OParen, // `(`
-    CParen, // `)`
-    OBrace, // `{`
-    CBrace, // `}`
-    OBrack, // '['
-    CBrack, // `]`
+    Assign, //    |:
+    RArrow, //    ->
+    Pipe, //      |
+    Colon, //     :
+    Sub, //       -
+    Add, //       +
+    Mul, //       *
+    Div, //       /
+    Comma, //     ,
+    OParen, //    (
+    CParen, //    )
+    OBrace, //    {
+    CBrace, //    }
+    OBrack, //    [
+    CBrack, //    ]
+    Equal, //     =
+    Dot, //       .
+    SemiColon, // ;
+    Question, //  ?
+
     // Literals //
     Identifier,
     NumberLit,
     StringLit,
     CharLit,
+
+    Comment,
 
     // EOF //
     Eof,
@@ -62,6 +70,8 @@ pub const Kind = enum {
             .Con => "Con",
             .Func => "Func",
             .Struct => "Struct",
+            .Enum => "Enum",
+            .Comment => "Comment",
             .Pipe => "Pipe",
             .Assign => "Assign",
             .Colon => "Colon",
@@ -69,6 +79,10 @@ pub const Kind = enum {
             .Add => "Add",
             .Mul => "Mul",
             .Div => "Div",
+            .Dot => "Dot",
+            .Question => "Question",
+            .SemiColon => "SemiColon",
+            .Equal => "Equal",
             .Comma => "Comma",
             .OParen => "OParen",
             .CParen => "CParen",
