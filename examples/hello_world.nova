@@ -1,5 +1,0 @@
-con print = std.io.printf;
-
-con main | func() -> void : {
-	printf("Hello world!\n")
-}
