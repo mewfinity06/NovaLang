@@ -1,37 +1,62 @@
 const std = @import("std");
-const print = std.debug.print;
 
-pub const NovaError = error{
-    // Lexing Errors
+const clap = @import("clap");
+const nova = @import("nova");
+const NovaError = nova.NovaError;
 
-    // Parsing Errors
+const lexer = @import("lexer/lexer.zig");
+const Lexer = lexer.Lexer;
 
-    // General Errors
-    Unimplemented,
-    Todo,
-};
+pub fn main() !void {
+    var da = std.heap.DebugAllocator(.{}){};
+    defer _ = da.deinit();
+    const alloc = da.allocator();
 
-pub fn info(comptime fmt: []const u8, args: anytype) void {
-    print("INFO: \n", .{});
-    print(fmt, args);
+    // Init clap
+    const params = comptime clap.parseParamsComptime(
+        \\-r, --run <str>    Run the given file
+        \\-v, --version      Prints the version
+        \\-h, --help         Displays this help message
+    );
+
+    var diag = clap.Diagnostic{};
+    var res = clap.parse(clap.Help, &params, clap.parsers.default, .{
+        .diagnostic = &diag,
+        .allocator = alloc,
+    }) catch |err| {
+        diag.report(std.io.getStdErr().writer(), err) catch {};
+        return err;
+    };
+    defer res.deinit();
+
+    // Parse over clap arguments
+    if (res.args.help != 0) return usage(&params);
+    if (res.args.version != 0) return nova.info("Nova version: {s}\n", .{nova.VERSION});
+    if (res.args.run) |file_to_run| {
+        // Get path
+        var path_buffer: [std.fs.max_path_bytes]u8 = undefined;
+        const path = try std.fs.realpath(file_to_run, &path_buffer);
+
+        // Open the file
+        const file = try std.fs.openFileAbsolute(path, .{});
+        defer file.close();
+
+        const size = (try file.stat()).size;
+        const file_buffer = try file.readToEndAlloc(alloc, size);
+        defer alloc.free(file_buffer);
+
+        var l = Lexer(path, file_buffer);
+
+        while (l.next()) |t| nova.info("Found `{s}` => {any}\n", .{ t.word, t.kind });
+    }
 }
 
-pub fn warn(comptime fmt: []const u8, args: anytype) void {
-    print("WARN: ", .{});
-    print(fmt, args);
-}
-
-pub fn err(comptime fmt: []const u8, args: anytype) void {
-    print("ERR: ", .{});
-    print(fmt, args);
-}
-
-pub fn unimplemented(comptime whence: []const u8) NovaError {
-    print("Unimplemented: {s}\n", .{whence});
-    return .Unimplemented;
-}
-
-pub fn todo(comptime items: []const u8) NovaError {
-    print("TODO: {s}\n", .{items});
-    return .Todo;
+// TODO: Pretty this up!!
+fn usage(params: []const clap.Param(clap.Help)) !void {
+    const stderr = std.io.getStdErr().writer();
+    _ = try stderr.print("{s}\n", .{nova.ABOUT});
+    _ = try stderr.print("Usage: ", .{});
+    _ = try clap.usage(stderr, clap.Help, params);
+    _ = try stderr.print("\n", .{});
+    _ = try clap.help(stderr, clap.Help, params, .{});
 }
