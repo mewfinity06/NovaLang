@@ -12,15 +12,15 @@ mut foo := 42;
 val bar := 69;
 
 // Constants
-con BAZ := foo + bar;
+const BAZ := foo + bar;
 ```
 
 ### Functions
 
 ```odin
 // All functions are constant
-con add : fn(a: i32, b: i32) -> i32 = { a + b }
-con sub : fn(a: i32, b: i32) -> i32 = {
+const add : fn(a: i32, b: i32) -> i32 = { a + b }
+const sub : fn(a: i32, b: i32) -> i32 = {
     return a + b;
 }
 ```
