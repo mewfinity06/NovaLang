@@ -42,12 +42,18 @@ pub fn main() !void {
         defer file.close();
 
         const size = (try file.stat()).size;
-        const file_buffer = try file.readToEndAlloc(alloc, size);
+        const file_buffer: [:0]const u8 = try file.readToEndAllocOptions(alloc, size, null, @enumFromInt(0), 0);
         defer alloc.free(file_buffer);
 
-        var l = Lexer(path, file_buffer);
+        var l = Lexer.new(path, file_buffer);
 
-        while (l.next()) |t| nova.info("Found `{s}` => {any}\n", .{ t.word, t.kind });
+        while (l.next()) |t| {
+            nova.info("Found `{s}` => {any}\n", .{ t.word, t.kind });
+            if (t.kind == .eof) break;
+        }
+    } else {
+        try usage(&params);
+        return nova.err("You must provide a file to be read!\n", .{});
     }
 }
 

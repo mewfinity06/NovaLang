@@ -1,5 +1,5 @@
 const printf := std.io.printf;
 
-con main : fn() -> void = {
+const main : fn() -> void = {
     printf("Hello world!\n");
 }

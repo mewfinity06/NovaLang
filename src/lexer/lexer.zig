@@ -7,89 +7,130 @@ const token = @import("token.zig");
 const Token = token.Token;
 const Kind = token.Kind;
 
-pub fn Lexer(name: []const u8, source: []const u8) struct {
-    name: []const u8,
-    source: []const u8,
-    c: u8,
+pub const Lexer = struct {
+    file_name: []const u8,
+    contents: [:0]const u8,
+
     cur: usize = 0,
 
     const Self = @This();
 
+    const Keywords = [_][]const u8{ "const", "mut", "val" };
+
+    fn isKeyword(_: Self, key: []const u8) bool {
+        const eql = std.mem.eql;
+        for (Keywords) |keyword|
+            if (eql(u8, keyword, key))
+                return true;
+        return false;
+    }
+
+    pub fn new(file_name: []const u8, contents: [:0]const u8) Self {
+        return .{
+            .file_name = file_name,
+            .contents = contents,
+        };
+    }
+
     pub fn next(self: *Self) ?Token {
-        return self.next_inner() catch |e| switch (e) {
-            NovaError.OutOfBounds => {
-                nova.err("Reached out of bounds. Source len: {d}, cur len: {d}\n", .{ self.source.len, self.cur });
-                return null;
-            },
+        return self.nextInner() catch |e| switch (e) {
             NovaError.UnknownCharacter => {
-                nova.err("Unknown character: `{c}`\n", .{self.c});
+                const c = self.contents[self.cur];
+                nova.err("Unknown character `{c}` found\n", .{c});
                 return null;
             },
-            NovaError.Unimplemented, NovaError.Todo => return null,
+            NovaError.Unimplemented => return null,
             else => {
-                nova.err("Unhandled error: {any}\n", .{e});
+                nova.err("Unknown error type {any}\n", .{e});
                 return null;
             },
         };
     }
 
-    fn next_inner(self: *Self) !Token {
+    fn nextInner(self: *Self) !Token {
         try self.skipWhitespace();
-        return switch (self.c) {
+        const c = self.contents[self.cur];
+        return switch (c) {
+            0 => Token.EOF,
             'a'...'z', 'A'...'Z' => {
                 const ident = try self.readIdent();
-                return .{
-                    .word = ident,
-                    .kind = .ident,
-                };
+                if (self.isKeyword(ident))
+                    return Token.new(ident, .keyword)
+                else
+                    return Token.new(ident, .ident);
             },
-            ':' => switch (try self.peekC()) {
+            '"' => {
+                const string = try self.readString();
+                return Token.new(string[0 .. string.len - 1], .string);
+            },
+            ':' => switch (try self.peekN(1)) {
                 '=' => try self.makeToken(.assign, 2),
                 else => try self.makeToken(.colon, 1),
             },
-            else => return NovaError.UnknownCharacter,
+            '-' => switch (try self.peekN(1)) {
+                '>' => try self.makeToken(.arrow, 2),
+                else => try self.makeToken(.dash, 1),
+            },
+            '=' => try self.makeToken(.equals, 1),
+            '.' => try self.makeToken(.dot, 1),
+            ';' => try self.makeToken(.semicolon, 1),
+            '(' => try self.makeToken(.oparen, 1),
+            ')' => try self.makeToken(.cparen, 1),
+            '{' => try self.makeToken(.obrack, 1),
+            '}' => try self.makeToken(.cbrack, 1),
+            '[' => try self.makeToken(.osquare, 1),
+            ']' => try self.makeToken(.csquare, 1),
+            else => NovaError.UnknownCharacter,
         };
+    }
+
+    fn makeToken(self: *Self, kind: Kind, len: usize) !Token {
+        defer self.cur += len;
+        return .{
+            .word = self.contents[self.cur .. self.cur + len],
+            .kind = kind,
+        };
+    }
+
+    fn peekN(self: *Self, n: usize) !u8 {
+        if (self.cur + n >= self.contents.len) return NovaError.OutOfBounds;
+        return self.contents[self.cur + n];
+    }
+
+    fn skipWhitespace(self: *Self) !void {
+        while (self.cur < self.contents.len and std.ascii.isWhitespace(self.contents[self.cur])) self.cur += 1;
     }
 
     fn readIdent(self: *Self) ![]const u8 {
         const start = self.cur;
-        while (self.cur < self.source.len and std.ascii.isAlphanumeric(self.c)) : (self.cur += 1)
-            self.updateC();
-        return self.source[start .. self.cur - 1];
+        while (self.cur < self.contents.len and std.ascii.isAlphanumeric(self.contents[self.cur])) self.cur += 1;
+        return self.contents[start..self.cur];
     }
 
-    fn updateC(self: *Self) void {
-        self.c = self.source[self.cur];
-    }
-
-    fn makeToken(self: *Self, kind: Kind, len: usize) !Token {
+    fn readString(self: *Self) ![]const u8 {
+        // skip the first "
+        self.cur += 1;
         const start = self.cur;
-        self.cur += len;
-        self.updateC();
-        return Token.new(self.source[start..self.cur], kind);
+        while (self.cur < self.contents.len and self.contents[self.cur] != '"') self.cur += 1;
+        // skip the second "
+        self.cur += 1;
+        return self.contents[start..self.cur];
     }
+};
 
-    fn peekC(self: *Self) !u8 {
-        if (self.cur + 1 >= self.source.len) return NovaError.OutOfBounds;
-        return self.source[self.cur + 1];
-    }
+//const expect = std.testing.expect;
 
-    fn nextC(self: *Self) !u8 {
-        defer self.cur += 1;
-        defer self.updateC();
-        if (self.cur + 1 >= self.source.len) return NovaError.OutOfBounds;
-        return self.source[self.cur];
-    }
-
-    fn skipWhitespace(self: *Self) !void {
-        if (self.cur > self.source.len) return NovaError.OutOfBounds;
-        while (self.cur < self.source.len and std.ascii.isWhitespace(self.c)) : (self.cur += 1)
-            self.updateC();
-    }
-} {
-    return .{
-        .name = name,
-        .source = source,
-        .c = if (source.len > 0) source[0] else 0,
-    };
-}
+//test "lexing" {
+//    const name = "hello_world.nova";
+//    const contents: [:0]const u8 =
+//        \\const printf := std.io.printf;
+//        \\
+//        \\const main : fn() -> void = {
+//        \\    printf("Hello world!\n");
+//        \\}
+//    ;
+//
+//    var l = Lexer.new(name, contents);
+//
+//    try expect(l.next().?.kind == .keyword);
+//}

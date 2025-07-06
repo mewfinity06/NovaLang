@@ -17,10 +17,22 @@ pub const Token = struct {
 pub const Kind = enum {
     // Many Tokens
     assign, // :=
+    arrow, // ->
     // Single Tokens
     colon, // :
+    semicolon, // ;
     equals, // =
+    dot, // .
+    oparen, // (
+    cparen, // )
+    obrack, // {
+    cbrack, // }
+    osquare, // [
+    csquare, // ]
+    dash, // -
 
     ident,
+    string,
+    keyword,
     eof,
 };
