@@ -30,8 +30,17 @@ pub const Kind = enum {
     osquare, // [
     csquare, // ]
     dash, // -
+    comma, // ,
+    fslash, // /
+    bslash, // \
+    question, // ?
+    bang, // !
+    amper, // &
+    pipe, // |
 
+    comment,
     ident,
+    numeric,
     string,
     keyword,
     eof,

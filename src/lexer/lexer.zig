@@ -15,7 +15,14 @@ pub const Lexer = struct {
 
     const Self = @This();
 
-    const Keywords = [_][]const u8{ "const", "mut", "val" };
+    const Keywords = [_][]const u8{
+        "const",
+        "mut",
+        "val",
+        "null",
+        "enum",
+        "struct",
+    };
 
     fn isKeyword(_: Self, key: []const u8) bool {
         const eql = std.mem.eql;
@@ -59,6 +66,11 @@ pub const Lexer = struct {
                 else
                     return Token.new(ident, .ident);
             },
+            '_' => try self.makeToken(.ident, 1),
+            '0'...'9' => {
+                const numeric = try self.readNumeric();
+                return Token.new(numeric, .numeric);
+            },
             '"' => {
                 const string = try self.readString();
                 return Token.new(string[0 .. string.len - 1], .string);
@@ -71,6 +83,13 @@ pub const Lexer = struct {
                 '>' => try self.makeToken(.arrow, 2),
                 else => try self.makeToken(.dash, 1),
             },
+            '/' => switch (try self.peekN(1)) {
+                '/' => {
+                    const comment = try self.readComment();
+                    return Token.new(comment, .comment);
+                },
+                else => try self.makeToken(.fslash, 1),
+            },
             '=' => try self.makeToken(.equals, 1),
             '.' => try self.makeToken(.dot, 1),
             ';' => try self.makeToken(.semicolon, 1),
@@ -80,6 +99,11 @@ pub const Lexer = struct {
             '}' => try self.makeToken(.cbrack, 1),
             '[' => try self.makeToken(.osquare, 1),
             ']' => try self.makeToken(.csquare, 1),
+            ',' => try self.makeToken(.comma, 1),
+            '?' => try self.makeToken(.question, 1),
+            '!' => try self.makeToken(.bang, 1),
+            '&' => try self.makeToken(.amper, 1),
+            '|' => try self.makeToken(.pipe, 1),
             else => NovaError.UnknownCharacter,
         };
     }
@@ -107,6 +131,13 @@ pub const Lexer = struct {
         return self.contents[start..self.cur];
     }
 
+    // TODO: Read floating numbers...
+    fn readNumeric(self: *Self) ![]const u8 {
+        const start = self.cur;
+        while (self.cur < self.contents.len and std.ascii.isDigit(self.contents[self.cur])) self.cur += 1;
+        return self.contents[start..self.cur];
+    }
+
     fn readString(self: *Self) ![]const u8 {
         // skip the first "
         self.cur += 1;
@@ -114,6 +145,14 @@ pub const Lexer = struct {
         while (self.cur < self.contents.len and self.contents[self.cur] != '"') self.cur += 1;
         // skip the second "
         self.cur += 1;
+        return self.contents[start..self.cur];
+    }
+
+    fn readComment(self: *Self) ![]const u8 {
+        // skip the `//`
+        self.cur += 2;
+        const start = self.cur;
+        while (self.cur < self.contents.len and self.contents[self.cur] != '\n') self.cur += 1;
         return self.contents[start..self.cur];
     }
 };

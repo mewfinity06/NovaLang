@@ -1,6 +1,6 @@
 const printf := std.io.printf;
 
-const AccessLevel : enum {
+const AccessLevel : enum = {
     admin,
     guest,
 }
