@@ -14,20 +14,22 @@ const Person : struct = {
     level: AccessLevel,
 }
 
-// Zig-like struct initialization, Rust-like expression based returns
-const Person.new : fn(name: str, id? usize, level: AccessLevel) -> Self = {
-    .{
-        .name = name,
-        .id = id,
-        .level = level,
+impl Person {
+    // Zig-like struct initialization, Rust-like expression based returns
+    const new : fn(name: str, id? usize, level: AccessLevel) -> Self = {
+        .{
+            .name = name,
+            .id = id,
+            .level = level,
+        }
     }
-}
 
-const Person.print : fn(self: &Self) -> void = {
-    if (self.id) : |id|
-        printf("Employee #{d}\n", id);
-    printf("Name: {s}", self.name);
-    printf("Access Level: {s}", self.level);
+    const print : fn(self: &Self) -> void = {
+        if (self.id) : |id|
+            printf("Employee #{d}\n", id);
+        printf("Name: {s}", self.name);
+        printf("Access Level: {s}", self.level);
+    }
 }
 
 const main : fn() -> void = {
