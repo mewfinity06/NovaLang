@@ -12,27 +12,38 @@ pub const NovaError = error{
     // Universal Errors
     Unimplemented, Todo, __UNREACHABLE__ };
 
+const Color = struct {
+    pub const info = "\x1b[92m";
+    pub const warn = "\x1b[38;5;208m";
+    pub const err = "\x1b[91m";
+    pub const reset = "\x1b[0m";
+};
+
 pub fn info(comptime fmt: []const u8, args: anytype) void {
-    print("\x1b[92mINFO\x1b[0m: ", .{});
+    print("{s}[INFO]{s} ", .{ Color.info, Color.reset });
     print(fmt, args);
 }
 
 pub fn warn(comptime fmt: []const u8, args: anytype) void {
-    print("\x1b[38;5;208mWARNING\x1b[0m: ", .{});
+    print("{s}[WARNING]{s} ", .{ Color.warn, Color.reset });
     print(fmt, args);
 }
 
 pub fn err(comptime fmt: []const u8, args: anytype) void {
-    print("\x1b[91mERROR\x1b[0m: ", .{});
+    print("{s}[ERROR]{s} ", .{ Color.err, Color.reset });
     print(fmt, args);
 }
 
 pub fn unimplemented(comptime whence: []const u8) NovaError {
-    print("\x1b[91mUNIMPLEMENTED\x1b[0m: {s}\n", .{whence});
+    print("{s}[UNIMPLEMENTED]{s} {s}\n", .{ Color.err, Color.reset, whence });
     return NovaError.Unimplemented;
 }
 
 pub fn todo(comptime item: []const u8) NovaError {
-    print("\x1b[91mTODO\x1b[0m: {s}\n", .{item});
+    print("{s}[TODO]{s} {s}\n", .{ Color.info, Color.reset, item });
     return NovaError.Todo;
+}
+
+pub fn testing(comptime item: []const u8) void {
+    print("{s}[TESTING]{s} {s}\n", .{ Color.info, Color.reset, item });
 }
