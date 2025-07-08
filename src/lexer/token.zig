@@ -42,6 +42,12 @@ pub const Kind = enum {
     ident,
     numeric,
     string,
-    keyword,
+
+    // Keywords
+    mut,
+    val,
+    @"const",
+    static,
+
     eof,
 };

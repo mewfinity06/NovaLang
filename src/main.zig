@@ -108,8 +108,8 @@ pub fn main() !void {
             var p = Parser.new(&l);
 
             while (p.next()) |n| {
-                if (n == .eof) break;
                 nova.info("Found {any}\n", .{n});
+                if (n == .eof) break;
             }
         }
     }

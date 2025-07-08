@@ -10,27 +10,9 @@ const Kind = token.Kind;
 pub const Lexer = struct {
     file_name: []const u8,
     contents: [:0]const u8,
-
     cur: usize = 0,
 
     const Self = @This();
-
-    const Keywords = [_][]const u8{
-        "const",
-        "mut",
-        "val",
-        "null",
-        "enum",
-        "struct",
-    };
-
-    fn isKeyword(_: Self, key: []const u8) bool {
-        const eql = std.mem.eql;
-        for (Keywords) |keyword|
-            if (eql(u8, keyword, key))
-                return true;
-        return false;
-    }
 
     pub fn new(file_name: []const u8, contents: [:0]const u8) Self {
         return .{
@@ -55,18 +37,23 @@ pub const Lexer = struct {
     }
 
     fn nextInner(self: *Self) !Token {
+        const eql = std.mem.eql;
+
         try self.skipWhitespace();
         const c = self.contents[self.cur];
         return switch (c) {
             0 => Token.EOF,
-            'a'...'z', 'A'...'Z' => {
+            'a'...'z', 'A'...'Z', '_' => {
                 const ident = try self.readIdent();
-                if (self.isKeyword(ident))
-                    return Token.new(ident, .keyword)
-                else
-                    return Token.new(ident, .ident);
+
+                // Check for keywords
+                if (eql(u8, ident, "mut")) return Token.new(ident, .mut);
+                if (eql(u8, ident, "val")) return Token.new(ident, .val);
+                if (eql(u8, ident, "const")) return Token.new(ident, .@"const");
+                if (eql(u8, ident, "static")) return Token.new(ident, .static);
+
+                return Token.new(ident, .ident);
             },
-            '_' => try self.makeToken(.ident, 1),
             '0'...'9' => {
                 const numeric = try self.readNumeric();
                 return Token.new(numeric, .numeric);
@@ -127,7 +114,7 @@ pub const Lexer = struct {
 
     fn readIdent(self: *Self) ![]const u8 {
         const start = self.cur;
-        while (self.cur < self.contents.len and std.ascii.isAlphanumeric(self.contents[self.cur])) self.cur += 1;
+        while (self.cur < self.contents.len and std.ascii.isAlphanumeric(self.contents[self.cur]) or self.contents[self.cur] == '_') self.cur += 1;
         return self.contents[start..self.cur];
     }
 

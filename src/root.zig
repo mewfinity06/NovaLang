@@ -9,6 +9,8 @@ pub const ABOUT: []const u8 =
 pub const NovaError = error{
     // Lexer Errors
     UnknownCharacter, OutOfBounds,
+    // Parser Errors
+    UnknownToken, ExpectError,
     // Universal Errors
     Unimplemented, Todo, __UNREACHABLE__ };
 
