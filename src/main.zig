@@ -2,8 +2,8 @@ const std = @import("std");
 const eql = std.mem.eql;
 
 const clap = @import("clap");
-const nova = @import("nova");
-const NovaError = nova.NovaError;
+const tern = @import("tern");
+const TernError = tern.TernError;
 
 const lexer = @import("lexer/lexer.zig");
 const Lexer = lexer.Lexer;
@@ -37,10 +37,10 @@ pub fn main() !void {
 
     // Parse over clap arguments
     if (res.args.help != 0) return usage(&params);
-    if (res.args.version != 0) return nova.info("Nova version: {s}\n", .{nova.VERSION});
+    if (res.args.version != 0) return tern.info("Tern version: {s}\n", .{tern.VERSION});
     if (res.args.run != 0) {
         const file_to_run = if (res.args.file) |f| f else {
-            nova.err("You must provide a file!\n", .{});
+            tern.err("You must provide a file!\n", .{});
             return;
         };
 
@@ -60,7 +60,7 @@ pub fn main() !void {
         var p = Parser.new(&l);
 
         while (p.next()) |n| {
-            nova.info("Found {any}\n", .{n});
+            tern.info("Found {any}\n", .{n});
             if (n == .eof) break;
         }
 
@@ -68,7 +68,7 @@ pub fn main() !void {
     }
     if (res.args.@"test") |test_section| {
         const file_to_run = if (res.args.file) |f| f else {
-            nova.err("You must provide a file!\n", .{});
+            tern.err("You must provide a file!\n", .{});
             return;
         };
 
@@ -85,30 +85,30 @@ pub fn main() !void {
         defer alloc.free(file_buffer);
 
         if (!eql(u8, test_section, "lexer") and !eql(u8, test_section, "parser")) {
-            nova.err("Unknown test parameter `{x}`, expected `lexer` or `parser`\n", .{test_section});
+            tern.err("Unknown test parameter `{x}`, expected `lexer` or `parser`\n", .{test_section});
             return;
         }
 
         // Test lexer
         if (eql(u8, test_section, "lexer")) {
-            nova.testing("Lexer");
+            tern.testing("Lexer");
 
             var l = Lexer.new(path, file_buffer);
             while (l.next()) |t| {
                 if (t.kind == .eof) break;
-                nova.info("Found {any} => `{s}`\n", .{ t.kind, t.word });
+                tern.info("Found {any} => `{s}`\n", .{ t.kind, t.word });
             }
         }
 
         // Test parser
         if (eql(u8, test_section, "parser")) {
-            nova.testing("Parser");
+            tern.testing("Parser");
 
             var l = Lexer.new(path, file_buffer);
             var p = Parser.new(&l);
 
             while (p.next()) |n| {
-                nova.info("Found {any}\n", .{n});
+                tern.info("Found {any}\n", .{n});
                 if (n == .eof) break;
             }
         }
@@ -118,7 +118,7 @@ pub fn main() !void {
 // TODO: Pretty this up!!
 fn usage(params: []const clap.Param(clap.Help)) !void {
     const stderr = std.io.getStdErr().writer();
-    _ = try stderr.print("{s}\n", .{nova.ABOUT});
+    _ = try stderr.print("{s}\n", .{tern.ABOUT});
     _ = try stderr.print("Usage: ", .{});
     _ = try clap.usage(stderr, clap.Help, params);
     _ = try stderr.print("\n", .{});

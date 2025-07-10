@@ -17,18 +17,17 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    exe_mod.addImport("nova", lib_mod);
+    exe_mod.addImport("tern", lib_mod);
 
     const lib = b.addLibrary(.{
         .linkage = .static,
-        .name = "nova",
+        .name = "tern",
         .root_module = lib_mod,
     });
-
     b.installArtifact(lib);
 
     const exe = b.addExecutable(.{
-        .name = "nova",
+        .name = "lirr",
         .root_module = exe_mod,
     });
 

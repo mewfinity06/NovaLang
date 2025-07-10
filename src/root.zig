@@ -3,10 +3,10 @@ const print = std.debug.print;
 
 pub const VERSION: []const u8 = "0.0.0";
 pub const ABOUT: []const u8 =
-    \\Nova is a simple compiled language written in Zig
+    \\Lirr is a simple compiled language written in Zig
 ;
 
-pub const NovaError = error{
+pub const TernError = error{
     // Lexer Errors
     UnknownCharacter, OutOfBounds,
     // Parser Errors
@@ -36,14 +36,14 @@ pub fn err(comptime fmt: []const u8, args: anytype) void {
     print(fmt, args);
 }
 
-pub fn unimplemented(comptime whence: []const u8) NovaError {
+pub fn unimplemented(comptime whence: []const u8) TernError {
     print("{s}[UNIMPLEMENTED]{s} {s}\n", .{ Color.err, Color.reset, whence });
-    return NovaError.Unimplemented;
+    return TernError.Unimplemented;
 }
 
-pub fn todo(comptime item: []const u8) NovaError {
+pub fn todo(comptime item: []const u8) TernError {
     print("{s}[TODO]{s} {s}\n", .{ Color.info, Color.reset, item });
-    return NovaError.Todo;
+    return TernError.Todo;
 }
 
 pub fn testing(comptime item: []const u8) void {
