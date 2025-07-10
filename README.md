@@ -1,10 +1,12 @@
-# Nova Lang
+# Tern Lang
+
+Check docs for must up-to-date syntax
 
 ## How-To's
 
 ### Variables
 
-```odin
+```rust
 // Mutable
 mut foo := 42;
 
@@ -17,7 +19,7 @@ const BAZ := foo + bar;
 
 ### Functions
 
-```odin
+```rust
 // All functions are constant
 const add : fn(a: i32, b: i32) -> i32 = { a + b }
 const sub : fn(a: i32, b: i32) -> i32 = {

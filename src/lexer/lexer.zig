@@ -1,7 +1,7 @@
 const std = @import("std");
-const nova = @import("nova");
+const tern = @import("tern");
 
-const NovaError = nova.NovaError;
+const TernError = tern.TernError;
 
 const token = @import("token.zig");
 const Token = token.Token;
@@ -23,14 +23,14 @@ pub const Lexer = struct {
 
     pub fn next(self: *Self) ?Token {
         return self.nextInner() catch |e| switch (e) {
-            NovaError.UnknownCharacter => {
+            TernError.UnknownCharacter => {
                 const c = self.contents[self.cur];
-                nova.err("Unknown character `{c}` found\n", .{c});
+                tern.err("Unknown character `{c}` found\n", .{c});
                 return null;
             },
-            NovaError.Unimplemented => return null,
+            TernError.Unimplemented => return null,
             else => {
-                nova.err("Unknown error type {any}\n", .{e});
+                tern.err("Unknown error type {any}\n", .{e});
                 return null;
             },
         };
@@ -91,7 +91,7 @@ pub const Lexer = struct {
             '!' => try self.makeToken(.bang, 1),
             '&' => try self.makeToken(.amper, 1),
             '|' => try self.makeToken(.pipe, 1),
-            else => NovaError.UnknownCharacter,
+            else => TernError.UnknownCharacter,
         };
     }
 
@@ -104,7 +104,7 @@ pub const Lexer = struct {
     }
 
     fn peekN(self: *Self, n: usize) !u8 {
-        if (self.cur + n >= self.contents.len) return NovaError.OutOfBounds;
+        if (self.cur + n >= self.contents.len) return TernError.OutOfBounds;
         return self.contents[self.cur + n];
     }
 
@@ -143,20 +143,3 @@ pub const Lexer = struct {
         return self.contents[start..self.cur];
     }
 };
-
-//const expect = std.testing.expect;
-
-//test "lexing" {
-//    const name = "hello_world.nova";
-//    const contents: [:0]const u8 =
-//        \\const printf := std.io.printf;
-//        \\
-//        \\const main : fn() -> void = {
-//        \\    printf("Hello world!\n");
-//        \\}
-//    ;
-//
-//    var l = Lexer.new(name, contents);
-//
-//    try expect(l.next().?.kind == .keyword);
-//}
