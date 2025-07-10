@@ -3,7 +3,7 @@ const printf := std.io.printf;
 const AccessLevel : enum = {
     admin,
     guest,
-}
+};
 
 // This is an person struct that contains a name,
 //   an optional id value, and an access level.
@@ -12,7 +12,7 @@ const Person : struct = {
     name : str,
     id   ? usize,
     level: AccessLevel,
-}
+};
 
 impl Person {
     // Zig-like struct initialization, Rust-like expression based returns
@@ -22,15 +22,15 @@ impl Person {
             .id = id,
             .level = level,
         }
-    }
+    };
 
     const print : fn(self: &Self) -> void = {
         if (self.id) : |id|
             printf("Employee #{d}\n", id);
         printf("Name: {s}", self.name);
         printf("Access Level: {s}", self.level);
-    }
-}
+    };
+};
 
 const main : fn() -> void = {
     val creator = Person.new(name: "Mew", id: 0000, level: .admin);
@@ -38,4 +38,4 @@ const main : fn() -> void = {
 
     val some_guest = Person.new("Bob", null, .guest);
     some_guest.print();
-}
+};
