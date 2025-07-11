@@ -17,7 +17,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    exe_mod.addImport("tern", lib_mod);
+    exe_mod.addImport("nova", lib_mod);
 
     const lib = b.addLibrary(.{
         .linkage = .static,
@@ -27,7 +27,7 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(lib);
 
     const exe = b.addExecutable(.{
-        .name = "tern",
+        .name = "nova",
         .root_module = exe_mod,
     });
 
